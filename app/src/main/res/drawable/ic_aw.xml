@@ -1,0 +1,31 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="60dp"
+    android:viewportWidth="80"
+    android:viewportHeight="60">
+
+    <!-- Background -->
+    <path
+        android:fillColor="#3399CC"
+        android:pathData="M0,0h80v60h-80z" />
+
+    <!-- Yellow Stripes -->
+    <path
+        android:fillColor="#FFFF00"
+        android:pathData="M0,45h80v3H0z" />
+    <path
+        android:fillColor="#FFFF00"
+        android:pathData="M0,52h80v3H0z" />
+
+    <!-- White Border of Star -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M10,10 l4,12 -10,-7h12l-10,7z"
+        android:strokeWidth="2"
+        android:strokeColor="#FFFFFF"/>
+
+    <!-- Red Star -->
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M10,10 l4,12 -10,-7h12l-10,7z"/>
+</vector>

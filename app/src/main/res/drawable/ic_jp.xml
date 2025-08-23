@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="60dp"
+    android:viewportWidth="80"
+    android:viewportHeight="60">
+    
+    <!-- White background -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M0,0H80V60H0V0Z" />
+    
+    <!-- Red circle (sun) -->
+    <path
+        android:fillColor="#BC002D"
+        android:pathData="M40,12C50.3,12 58.7,20.3 58.7,30C58.7,39.7 50.3,48 40,48C29.7,48 21.4,39.7 21.4,30C21.4,20.3 29.7,12 40,12Z" />
+</vector>
+

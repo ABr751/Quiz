@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="60dp"
+    android:viewportWidth="80"
+    android:viewportHeight="60">
+    
+    <!-- Red stripe (top) -->
+    <path
+        android:fillColor="#D52B1E"
+        android:pathData="M0,0H80V20H0V0Z" />
+    
+    <!-- White stripe (middle) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M0,20H80V40H0V20Z" />
+    
+    <!-- Blue stripe (bottom) -->
+    <path
+        android:fillColor="#0038A8"
+        android:pathData="M0,40H80V60H0V40Z" />
+    
+    <!-- Coat of Arms - Simplified version -->
+    <!-- Main circle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#000000"
+        android:strokeWidth="0.2"
+        android:pathData="M40,22.3C44.2,22.3 47.7,25.8 47.7,30C47.7,34.2 44.2,37.7 40,37.7C35.8,37.7 32.3,34.2 32.3,30C32.3,25.8 35.8,22.3 40,22.3Z" />
+    
+    <!-- Inner circle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#000000"
+        android:strokeWidth="0.09"
+        android:pathData="M40,23.7C43.5,23.7 46.3,26.5 46.3,30C46.3,33.5 43.5,36.3 40,36.3C36.5,36.3 33.7,33.5 33.7,30C33.7,26.5 36.5,23.7 40,23.7Z" />
+    
+    <!-- Center circle -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:strokeColor="#000000"
+        android:strokeWidth="0.07"
+        android:pathData="M40,25.2C42.7,25.2 44.8,27.3 44.8,30C44.8,32.7 42.7,34.8 40,34.8C37.3,34.8 35.2,32.7 35.2,30C35.2,27.3 37.3,25.2 40,25.2Z" />
+    
+    <!-- Star (simplified) -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M40,28L41,30L40,32L39,30L40,28Z" />
+    
+    <!-- Laurel branches (simplified) -->
+    <path
+        android:fillColor="#009B3A"
+        android:pathData="M35,30L37,30L37,32L35,32Z" />
+    <path
+        android:fillColor="#009B3A"
+        android:pathData="M43,30L45,30L45,32L43,32Z" />
+    
+    <!-- Text "REPUBLICA DEL PARAGUAY" (simplified) -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M35,35L45,35L45,36L35,36Z" />
+</vector>

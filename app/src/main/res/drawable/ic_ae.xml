@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="60dp"
+    android:viewportWidth="80"
+    android:viewportHeight="60">
+    
+    <!-- Green stripe (top) -->
+    <path
+        android:fillColor="#00732F"
+        android:pathData="M0,0H80V20H0V0Z" />
+    
+    <!-- White stripe (middle) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M0,20H80V40H0V20Z" />
+    
+    <!-- Black stripe (bottom) -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M0,40H80V60H0V40Z" />
+    
+    <!-- Red vertical stripe (left) -->
+    <path
+        android:fillColor="#FF0000"
+        android:pathData="M0,0H27.5V60H0V0Z" />
+</vector>
+

@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="60dp"
+    android:viewportWidth="80"
+    android:viewportHeight="60">
+    
+    <!-- Background - Yellow stripe -->
+    <path
+        android:fillColor="#FFE800"
+        android:pathData="M0,0H80V60H0V0Z" />
+    
+    <!-- Blue stripe -->
+    <path
+        android:fillColor="#00148E"
+        android:pathData="M0,30H80V60H0V30Z" />
+    
+    <!-- Red stripe -->
+    <path
+        android:fillColor="#DA0010"
+        android:pathData="M0,45H80V60H0V45Z" />
+    
+    <!-- Coat of Arms - Simplified version -->
+    <!-- Main shield background -->
+    <path
+        android:fillColor="#FFDF00"
+        android:pathData="M30,20L40,20L40,40L30,40Z" />
+    
+    <!-- Blue stripe in shield -->
+    <path
+        android:fillColor="#0000C4"
+        android:pathData="M30,25L40,25L40,30L30,30Z" />
+    
+    <!-- Red stripe in shield -->
+    <path
+        android:fillColor="#E10000"
+        android:pathData="M30,30L40,30L40,35L30,35Z" />
+    
+    <!-- Condor (simplified) -->
+    <path
+        android:fillColor="#000000"
+        android:pathData="M35,15C35,15 34,25 36,25C38,25 39,23 39,23L39,18L35,15Z" />
+    
+    <!-- Sun rays (simplified) -->
+    <path
+        android:fillColor="#FFDF00"
+        android:pathData="M35,10L40,10L40,12L35,12Z" />
+    <path
+        android:fillColor="#FFDF00"
+        android:pathData="M35,8L40,8L40,10L35,10Z" />
+    <path
+        android:fillColor="#FFDF00"
+        android:pathData="M35,12L40,12L40,14L35,14Z" />
+    <path
+        android:fillColor="#FFDF00"
+        android:pathData="M35,6L40,6L40,8L35,8Z" />
+    
+    <!-- Laurel branches (simplified) -->
+    <path
+        android:fillColor="#005B00"
+        android:pathData="M25,25L30,25L30,35L25,35Z" />
+    <path
+        android:fillColor="#005B00"
+        android:pathData="M45,25L50,25L50,35L45,35Z" />
+    
+    <!-- Flag pole -->
+    <path
+        android:fillColor="#B74D00"
+        android:pathData="M34,40H46V45H34Z" />
+    
+    <!-- Flag pole base -->
+    <path
+        android:fillColor="#908F8A"
+        android:pathData="M38,45L42,45L42,50L38,50Z" />
+</vector>

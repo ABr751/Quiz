@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="60dp"
+    android:viewportWidth="80"
+    android:viewportHeight="60">
+    
+    <!-- Yellow background -->
+    <path
+        android:fillColor="#FFE700"
+        android:pathData="M0,0H80V60H0V0Z" />
+    
+    <!-- Green stripe (top) -->
+    <path
+        android:fillColor="#36A100"
+        android:pathData="M0,0H80V20H0V0Z" />
+    
+    <!-- Blue stripe (bottom) -->
+    <path
+        android:fillColor="#006DBC"
+        android:pathData="M0,40H80V60H0V40Z" />
+</vector>
+

@@ -1,0 +1,42 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="80dp"
+    android:height="60dp"
+    android:viewportWidth="80"
+    android:viewportHeight="60">
+    
+    <!-- Blue background -->
+    <path
+        android:fillColor="#00247D"
+        android:pathData="M0,0H80V60H0Z"/>
+    
+    <!-- Red cross -->
+    <path
+        android:fillColor="#CF142B"
+        android:pathData="M0,0H80V8H0ZM0,52H80V60H0ZM0,0H8V60H0ZM72,0H80V60H72Z"/>
+    
+    <!-- White cross -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M0,0H80V4H0ZM0,56H80V60H0ZM0,0H4V60H0ZM76,0H80V60H76Z"/>
+    
+    <!-- Red stars (simplified) -->
+    <path
+        android:fillColor="#CF142B"
+        android:pathData="M12,8L13,10L15,10L13.5,11.5L14,13.5L12,12.5L10,13.5L10.5,11.5L9,10L11,10L12,8Z"/>
+    
+    <path
+        android:fillColor="#CF142B"
+        android:pathData="M20,12L21,14L23,14L21.5,15.5L22,17.5L20,16.5L18,17.5L18.5,15.5L17,14L19,14L20,12Z"/>
+    
+    <path
+        android:fillColor="#CF142B"
+        android:pathData="M16,20L17,22L19,22L17.5,23.5L18,25.5L16,24.5L14,25.5L14.5,23.5L13,22L15,22L16,20Z"/>
+    
+    <path
+        android:fillColor="#CF142B"
+        android:pathData="M24,16L25,18L27,18L25.5,19.5L26,21.5L24,20.5L22,21.5L22.5,19.5L21,18L23,18L24,16Z"/>
+    
+    <path
+        android:fillColor="#CF142B"
+        android:pathData="M28,24L29,26L31,26L29.5,27.5L30,29.5L28,28.5L26,29.5L26.5,27.5L25,26L27,26L28,24Z"/>
+</vector>

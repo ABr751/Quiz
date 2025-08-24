@@ -29,7 +29,6 @@ data class QuizState(
     val selectedAnswerId: Int? = null,
     val isAnswered: Boolean = false,
     val correctAnswerId: Int? = null,
-    val quizStartTime: Long = 0L,
     val lastUpdateTime: Long = 0L,
     val answerTime: Long = 0L // Track when the answer was given
 )
@@ -76,17 +75,9 @@ class QuizViewModel : ViewModel() {
                     _state.value = initialState
                     saveState(initialState, context)
                 } else {
-                    Log.d( "QuizViewModel initiate", "initiating quiz state: ${savedState.quizStartTime}}")
+                    Log.d( "QuizViewModel initiate", "initiating quiz state: ${quizPreferences?.getQuizStartTime()}}")
                     // Quiz was already started, calculate current state based on elapsed time
-                    val calculatedState = calculateCurrentState(savedState)
-                    _state.value = calculatedState
-                    Log.d("QuizViewModel resuming", "Calculated State: ${Gson().toJson(calculatedState)}")
-                    saveState(calculatedState, context)
-
-                    // If quiz is not complete, restart the timer
-                    if (!savedState.isQuizComplete) {
-                        startQuestionTimer(context)
-                    }
+                    calculateCurrentState(savedState)
                 }
             }
         }
@@ -97,14 +88,15 @@ class QuizViewModel : ViewModel() {
         timerJob?.cancel()
 
         // Set quiz start time if not already set
-        if (_state.value.quizStartTime == 0L) {
+        if (quizPreferences?.getQuizStartTime() == 0L) {
+            quizPreferences?.setQuizStartTime(System.currentTimeMillis())
             val startState = _state.value.copy(
-                quizStartTime = System.currentTimeMillis(),
                 lastUpdateTime = System.currentTimeMillis()
             )
             _state.value = startState
             saveState(startState, context)
         }
+        Log.d( "QuizViewModel start", "Starting quiz with start time: ${quizPreferences?.getQuizStartTime()}")
 
         // Start the question phase timer
         timerJob = viewModelScope.launch {
@@ -122,6 +114,7 @@ class QuizViewModel : ViewModel() {
             val currentTime = System.currentTimeMillis()
             val elapsedTime = (currentTime - quizStartTime) / 1000
             val currentIndex = elapsedTime / MAX_QUESTION_PERIOD
+            Log.d( "QuizViewModel calculate", "Elapsed Time: $elapsedTime seconds, Current Index: $currentIndex")
             val phase = elapsedTime % MAX_QUESTION_PERIOD
 
             var remainingQuestionDuration = 0
@@ -135,8 +128,10 @@ class QuizViewModel : ViewModel() {
                 if (phase < QUESTION_DURATION) {
                     // Question phase
                     remainingQuestionDuration = (QUESTION_DURATION - phase).toInt()
-                    if (_state.value.isAnswered)
+                    if (_state.value.isAnswered){
+                        quizPreferences?.setQuizStartTime(quizPreferences!!.getQuizStartTime() - (remainingQuestionDuration * 1000))
                         timerJob?.cancel()
+                    }
                 } else {
                     remainingIntervalDuration = (MAX_QUESTION_PERIOD - phase).toInt()
                 }
@@ -271,11 +266,11 @@ class QuizViewModel : ViewModel() {
 
 
     fun refreshState(context: Context) {
-        Log.d("QuizViewModel refresh", "Refreshing state with start time: ${_state.value.quizStartTime}")
+        if (_state.value.questions.isNotEmpty() && quizPreferences!!.getQuizStartTime() > 0) {
+            Log.d("QuizViewModel refresh", "Refreshing state with start time: ${quizPreferences?.getQuizStartTime()}")
 
-        if (_state.value.questions.isNotEmpty() && _state.value.quizStartTime > 0) {
             val updatedState = calculateCurrentState(_state.value)
-            _state.value = updatedState
+            _state.value = updatedState.copy(intervalTimer = INTERVAL_DURATION)
             saveState(updatedState, context)
 
             // Restart timer if quiz is not complete
@@ -296,6 +291,6 @@ class QuizViewModel : ViewModel() {
     companion object {
         const val QUESTION_DURATION = 30
         const val INTERVAL_DURATION = 10
-        const val MAX_QUESTION_PERIOD = 40
+        const val MAX_QUESTION_PERIOD = QUESTION_DURATION + INTERVAL_DURATION
     }
 }

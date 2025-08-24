@@ -4,6 +4,7 @@ import android.content.Context
 import android.content.SharedPreferences
 import com.example.flagquiz.presentation.quiz.QuizState
 import com.google.gson.Gson
+import androidx.core.content.edit
 
 class QuizPreferences(context: Context) {
     private val sharedPreferences: SharedPreferences = context.getSharedPreferences(
@@ -19,11 +20,11 @@ class QuizPreferences(context: Context) {
     }
 
     fun saveQuizState(quizState: QuizState) {
-        val editor = sharedPreferences.edit()
-        editor.putString(KEY_QUIZ_STATE, gson.toJson(quizState))
-        editor.putLong(KEY_QUIZ_START_TIME, quizState.quizStartTime)
-        editor.putBoolean(KEY_IS_QUIZ_ACTIVE, !quizState.isQuizComplete)
-        editor.apply()
+        sharedPreferences.edit {
+            putString(KEY_QUIZ_STATE, gson.toJson(quizState))
+            putBoolean(KEY_IS_QUIZ_ACTIVE, !quizState.isQuizComplete)
+            apply()
+        }
     }
 
     fun loadQuizState(): QuizState? {
@@ -42,6 +43,14 @@ class QuizPreferences(context: Context) {
     fun getQuizStartTime(): Long {
         return sharedPreferences.getLong(KEY_QUIZ_START_TIME, 0L)
     }
+
+    fun setQuizStartTime(lng: Long) {
+        sharedPreferences.edit {
+            putLong(KEY_QUIZ_START_TIME, lng)
+            apply()
+        }
+    }
+
 
     fun isQuizActive(): Boolean {
         return sharedPreferences.getBoolean(KEY_IS_QUIZ_ACTIVE, false)

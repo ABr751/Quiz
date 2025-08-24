@@ -20,7 +20,7 @@ import kotlinx.coroutines.delay
 fun CountdownScreen(
     onCountdownComplete: () -> Unit = {}
 ) {
-    var countdownSeconds by remember { mutableStateOf(5) }
+    var countdownSeconds by remember { mutableIntStateOf(20) }
     
     LaunchedEffect(Unit) {
         while (countdownSeconds > 0) {

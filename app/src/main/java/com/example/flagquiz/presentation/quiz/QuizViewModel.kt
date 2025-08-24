@@ -1,11 +1,14 @@
 package com.example.flagquiz.presentation.quiz
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.flagquiz.data.local.QuizPreferences
 import com.example.flagquiz.data.model.Question
 import com.example.flagquiz.data.repository.QuizRepository
+import com.example.flagquiz.presentation.quiz.QuizViewModel.Companion.INTERVAL_DURATION
+import com.example.flagquiz.presentation.quiz.QuizViewModel.Companion.QUESTION_DURATION
 import com.google.gson.Gson
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -17,8 +20,8 @@ data class QuizState(
     val currentQuestionIndex: Int = 0,
     val currentQuestion: Question? = null,
     val questions: List<Question> = emptyList(),
-    val questionTimer: Int = 10,
-    val intervalTimer: Int = 3,
+    val questionTimer: Int = QUESTION_DURATION,
+    val intervalTimer: Int = INTERVAL_DURATION,
     val isShowingInterval: Boolean = false,
     val isQuizComplete: Boolean = false,
     val correctAnswers: Int = 0,
@@ -73,13 +76,15 @@ class QuizViewModel : ViewModel() {
                     _state.value = initialState
                     saveState(initialState, context)
                 } else {
+                    Log.d( "QuizViewModel initiate", "initiating quiz state: ${savedState.quizStartTime}}")
                     // Quiz was already started, calculate current state based on elapsed time
-                    val calculatedState = calculateCurrentState(savedState, questions)
+                    val calculatedState = calculateCurrentState(savedState)
                     _state.value = calculatedState
+                    Log.d("QuizViewModel resuming", "Calculated State: ${Gson().toJson(calculatedState)}")
                     saveState(calculatedState, context)
 
                     // If quiz is not complete, restart the timer
-                    if (!calculatedState.isQuizComplete) {
+                    if (!savedState.isQuizComplete) {
                         startQuestionTimer(context)
                     }
                 }
@@ -107,20 +112,22 @@ class QuizViewModel : ViewModel() {
         }
     }
 
-    private fun calculateCurrentState(savedState: QuizState, questions: List<Question>): QuizState {
+    private fun calculateCurrentState(savedState: QuizState): QuizState {
         if (savedState.isQuizComplete) {
             _state.value = _state.value.copy(isQuizComplete = true)
             return _state.value
         } else {
+            val quizStartTime = quizPreferences?.getQuizStartTime()?:0
+            Log.d("QuizViewModel calculate", "Calculating state with quizStartTime: $quizStartTime")
             val currentTime = System.currentTimeMillis()
-            val elapsedTime = (currentTime - savedState.quizStartTime) / 1000
+            val elapsedTime = (currentTime - quizStartTime) / 1000
             val currentIndex = elapsedTime / MAX_QUESTION_PERIOD
             val phase = elapsedTime % MAX_QUESTION_PERIOD
 
             var remainingQuestionDuration = 0
             var remainingIntervalDuration = 0
 
-            if (currentIndex >= questions.size) {
+            if (currentIndex >= savedState.questions.size) {
                 _state.value =
                     _state.value.copy(isQuizComplete = true, questionTimer = 0, intervalTimer = 0)
                 return _state.value
@@ -128,17 +135,19 @@ class QuizViewModel : ViewModel() {
                 if (phase < QUESTION_DURATION) {
                     // Question phase
                     remainingQuestionDuration = (QUESTION_DURATION - phase).toInt()
+                    if (_state.value.isAnswered)
+                        timerJob?.cancel()
                 } else {
                     remainingIntervalDuration = (MAX_QUESTION_PERIOD - phase).toInt()
                 }
             }
             _state.value = _state.value.copy(
-                questions = questions,
-                totalQuestions = questions.size,
+                questions = savedState.questions,
+                totalQuestions = savedState.questions.size,
                 questionTimer = remainingQuestionDuration,
                 intervalTimer = remainingIntervalDuration,
                 currentQuestionIndex = currentIndex.toInt(),
-                currentQuestion = questions[currentIndex.toInt()]
+                currentQuestion = savedState.questions[currentIndex.toInt()]
             )
 
             return _state.value
@@ -148,8 +157,9 @@ class QuizViewModel : ViewModel() {
     private suspend fun startQuestionTimer(context: Context) {
         while (_state.value.currentQuestionIndex < _state.value.questions.size && !_state.value.isQuizComplete) {
             // Update state based on current time
-            val updatedState = calculateCurrentState(_state.value, _state.value.questions)
+            val updatedState = calculateCurrentState(_state.value)
             _state.value = updatedState
+            Log.d( "QuizViewModel Timer", "Updated State: ${Gson().toJson(updatedState)}")
             saveState(updatedState, context)
 
             if (updatedState.isQuizComplete) {
@@ -261,8 +271,10 @@ class QuizViewModel : ViewModel() {
 
 
     fun refreshState(context: Context) {
+        Log.d("QuizViewModel refresh", "Refreshing state with start time: ${_state.value.quizStartTime}")
+
         if (_state.value.questions.isNotEmpty() && _state.value.quizStartTime > 0) {
-            val updatedState = calculateCurrentState(_state.value, _state.value.questions)
+            val updatedState = calculateCurrentState(_state.value)
             _state.value = updatedState
             saveState(updatedState, context)
 
@@ -282,8 +294,8 @@ class QuizViewModel : ViewModel() {
     }
 
     companion object {
-        const val QUESTION_DURATION = 10
-        const val INTERVAL_DURATION = 3
-        const val MAX_QUESTION_PERIOD = 13
+        const val QUESTION_DURATION = 30
+        const val INTERVAL_DURATION = 10
+        const val MAX_QUESTION_PERIOD = 40
     }
 }

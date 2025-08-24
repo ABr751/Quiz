@@ -13,15 +13,19 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun GameOverScreen(
     correctAnswers: Int,
     totalQuestions: Int,
-    onPlayAgain: () -> Unit = {},
-    onBackToMenu: () -> Unit = {}
+    navigateToResult: (Int, Int) -> Unit = { _, _ -> }
 ) {
+    LaunchedEffect(Unit) {
+        delay(5000)
+        navigateToResult(correctAnswers, totalQuestions)
+    }
     Box(
         modifier = Modifier
             .fillMaxSize()
@@ -33,10 +37,11 @@ fun GameOverScreen(
                 .height(TopAppBarDefaults.LargeAppBarCollapsedHeight)
                 .background(Color(0xFFFF6B35))
         )
-        
+
         Card(
             modifier = Modifier
                 .fillMaxWidth()
+                .heightIn(min = 300.dp)
                 .padding(16.dp)
                 .offset(y = 100.dp),
             shape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp),
@@ -51,82 +56,24 @@ fun GameOverScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
+
                 Text(
-                    text = "Quiz Complete!",
+                    text = "FLAGS CHALLENGE",
+                    fontSize = 18.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = Color(0xFFFF6B35)
+                )
+
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp))
+
+                Text(
+                    text = "Game Over",
                     fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(vertical = 24.dp),
                     color = Color.Black,
                     textAlign = TextAlign.Center
                 )
-                
-                Spacer(modifier = Modifier.height(24.dp))
-                
-                Text(
-                    text = "Your Score",
-                    fontSize = 20.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Gray,
-                    textAlign = TextAlign.Center
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                Text(
-                    text = "$correctAnswers / $totalQuestions",
-                    fontSize = 48.sp,
-                    fontWeight = FontWeight.Bold,
-                    color = Color(0xFFFF6B35),
-                    textAlign = TextAlign.Center
-                )
-                
-                Spacer(modifier = Modifier.height(8.dp))
-                
-                val percentage = if (totalQuestions > 0) (correctAnswers * 100) / totalQuestions else 0
-                Text(
-                    text = "$percentage%",
-                    fontSize = 24.sp,
-                    fontWeight = FontWeight.Medium,
-                    color = Color.Gray,
-                    textAlign = TextAlign.Center
-                )
-                
-                Spacer(modifier = Modifier.height(32.dp))
-                
-                // Buttons
-                Button(
-                    onClick = onPlayAgain,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFFF6B35))
-                ) {
-                    Text(
-                        text = "Play Again",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color.White
-                    )
-                }
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                OutlinedButton(
-                    onClick = onBackToMenu,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(48.dp),
-                    shape = RoundedCornerShape(8.dp),
-                    colors = ButtonDefaults.outlinedButtonColors(
-                        contentColor = Color(0xFFFF6B35)
-                    )
-                ) {
-                    Text(
-                        text = "Back to Menu",
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
             }
         }
     }

@@ -58,11 +58,10 @@ fun ResultScreen(
             verticalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "Quiz Complete!",
+                text = "FLAGS CHALLENGE",
                 fontSize = 28.sp,
                 fontWeight = FontWeight.Bold,
-                color = Color.Black,
-                textAlign = TextAlign.Center
+                color = Color(0xFFFF6B35)
             )
 
             Spacer(modifier = Modifier.height(24.dp))

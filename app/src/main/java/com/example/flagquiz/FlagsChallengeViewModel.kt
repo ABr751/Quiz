@@ -37,10 +37,6 @@ class FlagsChallengeViewModel : ViewModel() {
     private val _state = MutableStateFlow(FlagsChallengeState())
     val state: StateFlow<FlagsChallengeState> = _state.asStateFlow()
     
-    fun updateSelectedTab(tabIndex: Int) {
-        _state.value = _state.value.copy(selectedTab = tabIndex)
-    }
-    
     fun updateHours(hours: String) {
         if (hours.length <= 2 && hours.all { it.isDigit() }) {
             val newScheduledTime = _state.value.scheduledTime.copy(hours = hours)

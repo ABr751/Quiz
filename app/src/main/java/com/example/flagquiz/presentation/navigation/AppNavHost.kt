@@ -72,8 +72,16 @@ fun AppNavHost() {
 
             GameOverScreen(
                 correctAnswers = correctAnswers,
-                totalQuestions = totalQuestions
-            )
+                totalQuestions = totalQuestions,
+                navigateToResult = { correct, total ->
+                    navController.navigate("${Screen.Result.route}/$correct/$total") {
+                        popUpTo(
+                            Screen.FlagsChallenge.route
+                        ){
+                            inclusive = false
+                        }
+                    }
+                })
         }
         composable(
             route = "${Screen.Result.route}/{correctAnswers}/{totalQuestions}",

@@ -59,7 +59,7 @@ fun GameOverScreen(
 
                 Text(
                     text = "FLAGS CHALLENGE",
-                    fontSize = 18.sp,
+                    fontSize = 28.sp,
                     fontWeight = FontWeight.Bold,
                     color = Color(0xFFFF6B35)
                 )

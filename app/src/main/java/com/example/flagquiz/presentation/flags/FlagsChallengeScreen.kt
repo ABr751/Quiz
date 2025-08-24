@@ -20,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.flagquiz.FlagsChallengeViewModel
+import com.example.flagquiz.data.local.QuizPreferences
 import com.example.flagquiz.ui.theme.FlagQuizTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -30,6 +31,7 @@ fun FlagsChallengeScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
+    val quizPreferences = remember { QuizPreferences(context) }
 
     LaunchedEffect(Unit) {
         while (true) {
@@ -38,7 +40,6 @@ fun FlagsChallengeScreen(
         }
     }
 
-    // Navigate to challenge when countdown becomes active
     LaunchedEffect(state.isCountdownActive) {
         if (state.isCountdownActive) {
             onNavigateToChallenge()
@@ -308,6 +309,8 @@ fun FlagsChallengeScreen(
                 Button(
                     onClick = {
                         if (viewModel.validateTimeInput()) {
+                            // Clear any existing quiz state when starting a new challenge
+                            quizPreferences.clearQuizState()
                             viewModel.saveScheduledTime()
                             onNavigateToChallenge()
                         }

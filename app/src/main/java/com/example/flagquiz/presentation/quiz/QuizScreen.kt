@@ -5,7 +5,6 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.basicMarquee
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.grid.GridCells
@@ -18,6 +17,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.intl.Locale
@@ -26,6 +26,8 @@ import androidx.compose.ui.text.toLowerCase
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleEventObserver
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.flagquiz.data.model.Country
 import kotlinx.coroutines.delay
@@ -41,17 +43,37 @@ fun QuizScreen(
 ) {
     val state by viewModel.state.collectAsState()
     val context = LocalContext.current
+    val lifecycleOwner = LocalLifecycleOwner.current
+    val quizPreferences = remember { com.example.flagquiz.data.local.QuizPreferences(context) }
 
     // Initialize quiz with context
     LaunchedEffect(Unit) {
         viewModel.initializeQuiz(context)
-        viewModel.startQuiz()
+        viewModel.startQuiz(context)
+    }
+
+    // Observe lifecycle events to refresh state when app comes back to foreground
+    DisposableEffect(lifecycleOwner) {
+        val observer = LifecycleEventObserver { _, event ->
+            when (event) {
+                Lifecycle.Event.ON_RESUME -> {
+                    viewModel.refreshState(context)
+                }
+                else -> {}
+            }
+        }
+        lifecycleOwner.lifecycle.addObserver(observer)
+        onDispose {
+            lifecycleOwner.lifecycle.removeObserver(observer)
+        }
     }
 
     // Handle quiz completion
     LaunchedEffect(state.isQuizComplete) {
         if (state.isQuizComplete) {
             delay(2000) // Show final results for 2 seconds
+            // Clear quiz state when quiz is completed
+            quizPreferences.clearQuizState()
             onQuizComplete(state.correctAnswers, state.totalQuestions)
         }
     }
@@ -100,7 +122,7 @@ fun QuizScreen(
                         shape = RoundedCornerShape(8.dp)
                     ) {
                         Text(
-                            text = String.format("00:%02d", state.currentTimer),
+                            text = String.format("00:%02d", state.questionTimer),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = Color.White,
@@ -108,7 +130,6 @@ fun QuizScreen(
                         )
                     }
 
-                    // Title
                     Text(
                         text = "FLAGS CHALLENGE",
                         fontSize = 18.sp,
@@ -170,7 +191,6 @@ fun QuizScreen(
                                 textAlign = TextAlign.Center
                             )
 
-
                             Text(
                                 text = String.format("00:%02d", state.intervalTimer),
                                 fontSize = 12.sp,
@@ -230,7 +250,7 @@ fun QuizScreen(
                                     option = question.countries[index],
                                     state = state,
                                     onOptionSelected = {
-                                        viewModel.selectAnswer(it)
+                                        viewModel.selectAnswer(it, context)
                                     },
                                 )
                             }

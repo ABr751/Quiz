@@ -21,7 +21,6 @@ class QuizRepository {
             
             quizData.questions
         } catch (e: Exception) {
-            // Return empty list if JSON loading fails
             emptyList()
         }
     }

@@ -1,170 +1,289 @@
 package com.example.flagquiz.presentation.quiz
 
 import android.content.Context
-import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.flagquiz.data.model.Country
+import com.example.flagquiz.data.local.QuizPreferences
 import com.example.flagquiz.data.model.Question
 import com.example.flagquiz.data.repository.QuizRepository
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
-import java.util.*
 
 data class QuizState(
     val currentQuestionIndex: Int = 0,
     val currentQuestion: Question? = null,
     val questions: List<Question> = emptyList(),
-    val currentTimer: Int = 30,
-    val intervalTimer: Int = 10,
+    val questionTimer: Int = 10,
+    val intervalTimer: Int = 3,
     val isShowingInterval: Boolean = false,
     val isQuizComplete: Boolean = false,
     val correctAnswers: Int = 0,
     val totalQuestions: Int = 0,
     val selectedAnswerId: Int? = null,
     val isAnswered: Boolean = false,
-    val correctAnswerId: Int? = null
+    val correctAnswerId: Int? = null,
+    val quizStartTime: Long = 0L,
+    val lastUpdateTime: Long = 0L,
+    val answerTime: Long = 0L // Track when the answer was given
 )
 
-class QuizViewModel(
-    private val savedStateHandle: SavedStateHandle
-) : ViewModel() {
+class QuizViewModel : ViewModel() {
     private val repository = QuizRepository()
-    private val gson = Gson()
-    
-    private val _state = MutableStateFlow(loadSavedState())
+
+
+    private val _state = MutableStateFlow(QuizState())
     val state: StateFlow<QuizState> = _state.asStateFlow()
-    
+
     private var timerJob: kotlinx.coroutines.Job? = null
-    
-    private fun loadSavedState(): QuizState {
-        val savedStateJson = savedStateHandle.get<String>("quiz_state")
-        return if (savedStateJson != null) {
-            try {
-                gson.fromJson(savedStateJson, QuizState::class.java)
-            } catch (e: Exception) {
-                QuizState()
-            }
-        } else {
-            QuizState()
+    private var quizPreferences: QuizPreferences? = null
+
+    private fun loadSavedState(context: Context): QuizState {
+        if (quizPreferences == null) {
+            quizPreferences = QuizPreferences(context)
         }
+        return quizPreferences?.loadQuizState() ?: QuizState()
     }
-    
-    private fun saveState(state: QuizState) {
-        savedStateHandle["quiz_state"] = gson.toJson(state)
+
+    private fun saveState(state: QuizState, context: Context) {
+        if (quizPreferences == null) {
+            quizPreferences = QuizPreferences(context)
+        }
+        quizPreferences?.saveQuizState(state)
     }
-    
+
     fun initializeQuiz(context: Context) {
         viewModelScope.launch {
             val questions = repository.loadQuestions(context)
-            val currentState = _state.value
-            
-            if (questions.isNotEmpty() && currentState.questions.isEmpty()) {
-                // First time loading
-                val initialState = currentState.copy(
-                    questions = questions,
-                    totalQuestions = questions.size,
-                    currentQuestion = questions.firstOrNull()
-                )
-                _state.value = initialState
-                saveState(initialState)
-            }
-        }
-    }
-    
-    fun startQuiz() {
-        // Cancel any existing timer job
-        timerJob?.cancel()
-        
-        timerJob = viewModelScope.launch {
-            startQuestionTimer()
-        }
-    }
-    
-    private suspend fun startQuestionTimer() {
-        while (_state.value.currentQuestionIndex < _state.value.questions.size) {
-            val currentQuestion = _state.value.questions[_state.value.currentQuestionIndex]
-            _state.value = _state.value.copy(
-                currentQuestion = currentQuestion,
-                currentTimer = 30,
-                isShowingInterval = false,
-                selectedAnswerId = null,
-                isAnswered = false,
-                correctAnswerId = null
-            )
-            saveState(_state.value)
-            
-            // Question timer
-            while (_state.value.currentTimer > 0 && !_state.value.isAnswered) {
-                delay(1000)
-                _state.value = _state.value.copy(currentTimer = _state.value.currentTimer - 1)
-                saveState(_state.value)
-            }
-            
-            // If not answered, mark as incorrect
-            if (!_state.value.isAnswered) {
-                _state.value = _state.value.copy(
-                    correctAnswerId = currentQuestion.answerId
-                )
-                saveState(_state.value)
-            }
-            
-            // Interval between questions
-            if (_state.value.currentQuestionIndex < _state.value.questions.size - 1) {
-                _state.value = _state.value.copy(
-                    isShowingInterval = true,
-                    intervalTimer = 10
-                )
-                saveState(_state.value)
-                
-                while (_state.value.intervalTimer > 0) {
-                    delay(1000)
-                    _state.value = _state.value.copy(intervalTimer = _state.value.intervalTimer - 1)
-                    saveState(_state.value)
+
+            if (questions.isNotEmpty()) {
+                // Load saved state from SharedPreferences
+                val savedState = loadSavedState(context)
+
+                if (savedState.questions.isEmpty()) {
+                    // First time loading
+                    val initialState = savedState.copy(
+                        questions = questions,
+                        totalQuestions = questions.size,
+                        currentQuestion = questions.firstOrNull()
+                    )
+                    _state.value = initialState
+                    saveState(initialState, context)
+                } else {
+                    // Quiz was already started, calculate current state based on elapsed time
+                    val calculatedState = calculateCurrentState(savedState, questions)
+                    _state.value = calculatedState
+                    saveState(calculatedState, context)
+
+                    // If quiz is not complete, restart the timer
+                    if (!calculatedState.isQuizComplete) {
+                        startQuestionTimer(context)
+                    }
                 }
             }
-            
-            _state.value = _state.value.copy(
-                currentQuestionIndex = _state.value.currentQuestionIndex + 1
-            )
-            saveState(_state.value)
         }
-        
-        // Quiz complete
-        _state.value = _state.value.copy(isQuizComplete = true)
-        saveState(_state.value)
     }
-    
-    fun selectAnswer(answerId: Int) {
+
+    fun startQuiz(context: Context) {
+        // Cancel any existing timer job
+        timerJob?.cancel()
+
+        // Set quiz start time if not already set
+        if (_state.value.quizStartTime == 0L) {
+            val startState = _state.value.copy(
+                quizStartTime = System.currentTimeMillis(),
+                lastUpdateTime = System.currentTimeMillis()
+            )
+            _state.value = startState
+            saveState(startState, context)
+        }
+
+        // Start the question phase timer
+        timerJob = viewModelScope.launch {
+            startQuestionPhaseTimer(context)
+        }
+    }
+
+    private fun calculateCurrentState(savedState: QuizState, questions: List<Question>): QuizState {
+        if (savedState.isQuizComplete) {
+            _state.value = _state.value.copy(isQuizComplete = true)
+            return _state.value
+        } else {
+            val currentTime = System.currentTimeMillis()
+            val elapsedTime = (currentTime - savedState.quizStartTime) / 1000
+            val currentIndex = elapsedTime / MAX_QUESTION_PERIOD
+            val phase = elapsedTime % MAX_QUESTION_PERIOD
+
+            var remainingQuestionDuration = 0
+            var remainingIntervalDuration = 0
+
+            if (currentIndex >= questions.size) {
+                _state.value =
+                    _state.value.copy(isQuizComplete = true, questionTimer = 0, intervalTimer = 0)
+                return _state.value
+            } else {
+                if (phase < QUESTION_DURATION) {
+                    // Question phase
+                    remainingQuestionDuration = (QUESTION_DURATION - phase).toInt()
+                } else {
+                    remainingIntervalDuration = (MAX_QUESTION_PERIOD - phase).toInt()
+                }
+            }
+            _state.value = _state.value.copy(
+                questions = questions,
+                totalQuestions = questions.size,
+                questionTimer = remainingQuestionDuration,
+                intervalTimer = remainingIntervalDuration,
+                currentQuestionIndex = currentIndex.toInt(),
+                currentQuestion = questions[currentIndex.toInt()]
+            )
+
+            return _state.value
+        }
+    }
+
+    private suspend fun startQuestionTimer(context: Context) {
+        while (_state.value.currentQuestionIndex < _state.value.questions.size && !_state.value.isQuizComplete) {
+            // Update state based on current time
+            val updatedState = calculateCurrentState(_state.value, _state.value.questions)
+            _state.value = updatedState
+            saveState(updatedState, context)
+
+            if (updatedState.isQuizComplete) {
+                break
+            }
+
+            delay(1000)
+        }
+
+        // Quiz complete
+        val completeState = _state.value.copy(isQuizComplete = true)
+        _state.value = completeState
+        saveState(completeState, context)
+    }
+
+    private suspend fun stopQuestionPhaseTimer(context: Context) {
+        if (_state.value.isAnswered) {
+            _state.value = _state.value.copy(questionTimer = 0)
+            saveState(_state.value, context)
+        }
+        startIntervalTimer(context)
+    }
+
+    private suspend fun startQuestionPhaseTimer(context: Context) {
+        var questionTime = QUESTION_DURATION
+        while (questionTime > 0 && !_state.value.isAnswered) {
+            _state.value = _state.value.copy(questionTimer = questionTime)
+            saveState(_state.value, context)
+            delay(1000)
+            questionTime--
+        }
+
+        // Question time is up, start interval
+        if (questionTime <= 0) {
+            startIntervalTimer(context)
+        }
+    }
+
+    private suspend fun startIntervalTimer(context: Context) {
+        var intervalTime = INTERVAL_DURATION
+        _state.value = _state.value.copy(isShowingInterval = true)
+        while (intervalTime > 0) {
+            _state.value = _state.value.copy(
+                intervalTimer = intervalTime
+            )
+            saveState(_state.value, context)
+            delay(1000)
+            intervalTime--
+        }
+        moveToNextQuestion(context)
+    }
+
+    private fun moveToNextQuestion(context: Context) {
+        val currentIndex = _state.value.currentQuestionIndex
+        val nextIndex = currentIndex + 1
+
+        if (nextIndex >= _state.value.questions.size) {
+            // Quiz is complete
+            _state.value = _state.value.copy(isQuizComplete = true)
+            saveState(_state.value, context)
+        } else {
+            // Move to next question
+            val nextQuestion = _state.value.questions[nextIndex]
+            _state.value = _state.value.copy(
+                currentQuestionIndex = nextIndex,
+                currentQuestion = nextQuestion,
+                questionTimer = QUESTION_DURATION,
+                intervalTimer = INTERVAL_DURATION,
+                isShowingInterval = false,
+                isAnswered = false,
+                selectedAnswerId = null,
+                correctAnswerId = null,
+                answerTime = 0L
+            )
+            saveState(_state.value, context)
+
+            // Start timer for next question
+            viewModelScope.launch {
+                startQuestionPhaseTimer(context)
+            }
+        }
+    }
+
+    fun selectAnswer(answerId: Int, context: Context) {
         if (_state.value.isAnswered) return
-        
+
         val currentQuestion = _state.value.currentQuestion ?: return
         val isCorrect = answerId == currentQuestion.answerId
-        
+
         val updatedState = _state.value.copy(
             selectedAnswerId = answerId,
             isAnswered = true,
             correctAnswerId = currentQuestion.answerId,
-            correctAnswers = if (isCorrect) _state.value.correctAnswers + 1 else _state.value.correctAnswers
+            correctAnswers = if (isCorrect) _state.value.correctAnswers + 1 else _state.value.correctAnswers,
+            answerTime = System.currentTimeMillis() // Record when answer was given
         )
         _state.value = updatedState
-        saveState(updatedState)
+        saveState(updatedState, context)
+
+        // Start interval timer when answer is selected
+        viewModelScope.launch {
+            if (_state.value.questionTimer >= 0) {
+                stopQuestionPhaseTimer(context)
+            } else {
+                startIntervalTimer(context)
+            }
+        }
     }
-    
-    fun resetQuiz() {
-        timerJob?.cancel()
-        val resetState = QuizState()
-        _state.value = resetState
-        saveState(resetState)
+
+
+    fun refreshState(context: Context) {
+        if (_state.value.questions.isNotEmpty() && _state.value.quizStartTime > 0) {
+            val updatedState = calculateCurrentState(_state.value, _state.value.questions)
+            _state.value = updatedState
+            saveState(updatedState, context)
+
+            // Restart timer if quiz is not complete
+            if (!updatedState.isQuizComplete) {
+                timerJob?.cancel()
+                timerJob = viewModelScope.launch {
+                    startQuestionTimer(context)
+                }
+            }
+        }
     }
-    
+
     override fun onCleared() {
         super.onCleared()
         timerJob?.cancel()
+    }
+
+    companion object {
+        const val QUESTION_DURATION = 10
+        const val INTERVAL_DURATION = 3
+        const val MAX_QUESTION_PERIOD = 13
     }
 }

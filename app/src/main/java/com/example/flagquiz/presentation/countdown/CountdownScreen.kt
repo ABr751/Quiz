@@ -43,7 +43,6 @@ fun CountdownScreen(
                 .background(Color(0xFFFF6B35))
         )
         
-        // Main content card
         Card(
             modifier = Modifier
                 .fillMaxWidth()
